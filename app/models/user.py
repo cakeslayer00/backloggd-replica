@@ -1,8 +1,9 @@
-from sqlalchemy import String, Boolean, DateTime, Enum as SAEnum
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy.sql import func
 import enum
 from datetime import datetime
+
+from sqlalchemy import String, Boolean, DateTime, Enum as SAEnum
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql import func
 
 from app.models.base import Base
 

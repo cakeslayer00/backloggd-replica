@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
 
 from app.core.database import get_db
-from app.core.redis import add_token_to_blocklist
+from app.core.redis import add_token_to_blocklist, is_token_blocked
 from app.core.security import hash_password, verify_password, create_access_token, decode_access_token
 from app.dependencies import get_current_user, http_bearer
 from app.models.user import User
@@ -58,6 +59,12 @@ async def logout(
 
     jti: str = payload.get("jti")
     exp: int = payload.get("exp")
+
+    if await is_token_blocked(jti):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been revoked"
+        )
 
     now = int(datetime.now(timezone.utc).timestamp())
     remaining_seconds = exp - now
