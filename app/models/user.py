@@ -2,10 +2,12 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import String, Boolean, DateTime, Enum as SAEnum
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
+from app.models.backlog_entry import BacklogEntry
 from app.models.base import Base
+from app.models.review import Review
 
 
 class UserRole(enum.Enum):
@@ -28,3 +30,5 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    backlog_entries: Mapped[list["BacklogEntry"]] = relationship(back_populates="user")
+    reviews: Mapped[list["Review"]] = relationship(back_populates="user")

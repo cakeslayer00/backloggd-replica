@@ -9,7 +9,7 @@ from alembic import context
 
 from app.core.config import settings
 from app.models.base import Base
-from app.models import user #noqa
+from app.models import user, game, platform, tag, backlog_entry, backlog_entry_tag, review, screenshot # noqa
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
