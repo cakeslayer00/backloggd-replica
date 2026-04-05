@@ -5,9 +5,7 @@ from sqlalchemy import String, Boolean, DateTime, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from app.models.backlog_entry import BacklogEntry
 from app.models.base import Base
-from app.models.review import Review
 
 
 class UserRole(enum.Enum):
