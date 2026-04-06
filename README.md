@@ -1,5 +1,10 @@
 # backloggd replica
 
+This is replica for popular game completion tracker tool **backloggd**
+
+
+
+
 ## Quick Start
 
 ### 1. Run services 
@@ -74,11 +79,6 @@ curl "localhost:9200/game-backlog-logs/_search?pretty" \
 Start Celery worker:
 ```bash
 celery -A app.core.celery_app worker --loglevel=info
-```
-
-Run weekly stats manually:
-```bash
-celery -A app.core.celery_app call app.tasks.export_tasks.generate_weekly_stats
 ```
 
 Check task status:

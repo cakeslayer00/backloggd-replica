@@ -44,6 +44,37 @@ services:
       timeout: 5s
       retries: 10
 
+  elasticsearch-init:
+    image: curlimages/curl:latest
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Waiting for ES to be ready..."
+        until curl -sf http://elasticsearch:9200/_cluster/health; do sleep 2; done
+        echo "Creating index..."
+        curl -X PUT "http://elasticsearch:9200/game-backlog-logs" -H 'Content-Type: application/json' -d'
+        {
+          "mappings": {
+            "properties": {
+              "timestamp":          { "type": "date" },
+              "log_type":           { "type": "keyword" },
+              "service":            { "type": "keyword" },
+              "endpoint":           { "type": "keyword" },
+              "method":             { "type": "keyword" },
+              "url":                { "type": "text" },
+              "status_code":        { "type": "integer" },
+              "processing_time_ms": { "type": "float" },
+              "ip":                 { "type": "ip" },
+              "port":               { "type": "integer" },
+              "message":            { "type": "text" }
+            }
+          }
+        }'
+        echo "Index created successfully"
+
   minio:
     image: minio/minio:latest
     container_name: backloggd-minio
