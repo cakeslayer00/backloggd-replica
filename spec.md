@@ -58,9 +58,6 @@ over the logic
 - IP extracted from `X-Forwarded-For` header if behind a proxy, falls back to
   `request.client.host`
 
-**Files:** `app/middleware/rate_limiter.py`
-
----
 
 ### d. Profiling Middleware
 
