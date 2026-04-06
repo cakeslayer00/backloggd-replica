@@ -2,8 +2,66 @@
 
 This is replica for popular game completion tracker tool **backloggd**
 
+# API Endpoints Reference
 
+## Auth
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| POST | `/api/auth/register` | public |
+| POST | `/api/auth/login` | public |
+| POST | `/api/auth/logout` | authenticated |
+| GET | `/api/auth/me` | authenticated |
 
+## Games
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/api/games` | public |
+| GET | `/api/games/{id}` | public |
+| POST | `/api/games` | admin only |
+| PUT | `/api/games/{id}` | admin only |
+| DELETE | `/api/games/{id}` | admin only |
+
+## Platforms
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/api/platforms` | public |
+| GET | `/api/platforms/{id}` | public |
+| POST | `/api/platforms` | admin only |
+| DELETE | `/api/platforms/{id}` | admin only |
+
+## Backlog
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/api/backlog` | owner only |
+| GET | `/api/backlog/{id}` | owner only |
+| POST | `/api/backlog` | authenticated |
+| PUT | `/api/backlog/{id}` | owner only |
+| DELETE | `/api/backlog/{id}` | owner only |
+
+## Reviews
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/api/reviews` | public |
+| GET | `/api/reviews/{id}` | public |
+| POST | `/api/reviews` | authenticated |
+| PUT | `/api/reviews/{id}` | owner / moderator / admin |
+| DELETE | `/api/reviews/{id}` | owner / moderator / admin |
+
+## Tags
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/api/tags` | public |
+| POST | `/api/tags` | authenticated |
+| DELETE | `/api/tags/{id}` | owner / moderator / admin |
+| POST | `/api/backlog/{id}/tags/{tag_id}` | owner only |
+| DELETE | `/api/backlog/{id}/tags/{tag_id}` | owner only |
+
+## Screenshots
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/api/backlog/{entry_id}/screenshots` | owner only |
+| POST | `/api/backlog/{entry_id}/screenshots` | owner only |
+| DELETE | `/api/backlog/{entry_id}/screenshots/{screenshot_id}` | owner only |
 
 ## Quick Start
 

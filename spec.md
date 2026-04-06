@@ -98,7 +98,6 @@ rule: the profiler must never be the reason your app is slow in production.
 
 ### a. Email Tasks
 
-**Plan:**
 Use Celery with Redis as the broker. Two tasks:
 - `send_confirmation_email(user_id)` — triggered on register, sends a verification
   link with a signed token
@@ -113,7 +112,6 @@ emails are sent during development.
 
 ### b. Image Compression Pipeline
 
-**Plan:**
 Screenshot upload endpoint (`POST /api/backlog/{entry_id}/screenshots`) accepts a
 multipart file, saves it temporarily, fires a Celery task, returns 202 Accepted
 immediately.
