@@ -10,7 +10,7 @@ from app.core.elasticsearch import close_es_client
 from app.middleware.logging import LoggingMiddleware
 from app.middleware.profiling import ProfilingMiddleware
 from app.middleware.rate_limiter import RateLimiterMiddleware
-from app.routers import auth
+from app.routers import auth, games, platforms, reviews, tags, backlogs, screenshots
 
 
 @asynccontextmanager
@@ -37,4 +37,11 @@ app.add_middleware(
     allowed_hosts=settings.ALLOWED_HOSTS,
 )
 
+
 app.include_router(auth.router)
+app.include_router(games.router)
+app.include_router(platforms.router)
+app.include_router(backlogs.router)
+app.include_router(reviews.router)
+app.include_router(tags.router)
+app.include_router(screenshots.router)
