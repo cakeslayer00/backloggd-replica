@@ -65,35 +65,45 @@ This is replica for popular game completion tracker tool **backloggd**
 
 ## Quick Start
 
-### 1. Run services 
+### 1. `.env`
+
+Copy `.env.example` to `.env`
+
+### 2. Run all services 
 
 ```bash
 docker compose up -d
 ```
 
-### 2. Install deps 
+This starts: app, db, redis, elasticsearch, minio, celery, flower, pgadmin, redis-commander, mailhog
 
+### 3. Run Migrations
+
+```bash
+docker compose exec app alembic upgrade head
+```
+
+Or if running locally:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-### 3. `.env`
-
-Copy `.env.example`  to `.env`
-
-### 4. Run Migrations
-
-```bash
 alembic upgrade head
-```
-
-### 5. Start the app 
-
-```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+## Services
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| API | http://localhost:8000 | FastAPI application |
+| API Docs | http://localhost:8000/docs | Swagger documentation |
+| Flower | http://localhost:5555 | Celery task monitoring |
+| pgAdmin | http://localhost:5050 | PostgreSQL UI (admin@backloggd.com / admin) |
+| Redis Commander | http://localhost:8081 | Redis UI |
+| MinIO Console | http://localhost:9001 | Screenshot storage (minioadmin / password) |
+| Mailhog | http://localhost:8025 | Email testing UI |
+| Elasticsearch | http://localhost:9200 | Request logs |
 
 ## Testing 
 
@@ -132,15 +142,11 @@ curl "localhost:9200/game-backlog-logs/_search?pretty" \
 
 ## Background Tasks
 
-### Celery Commands
+Celery is running in Docker. To view tasks:
+- **Flower** (task monitoring): http://localhost:5555
 
-Start Celery worker:
+To run Celery commands:
 ```bash
-celery -A app.core.celery_app worker --loglevel=info
-```
-
-Check task status:
-```bash
-celery -A app.core.celery_app inspect active
+docker compose exec celery celery -A app.core.celery_app inspect active
 ```
 

@@ -139,3 +139,68 @@ Order matters — middleware runs as a stack, outermost first:
    ↓
    FastAPI routers
 ```
+
+## 3. Docker Setup
+
+### a. Dockerfile Optimization
+
+The project uses a multi-stage Dockerfile (`Dockerfile`) for the FastAPI application:
+
+**Techniques used for small and fast images:**
+1. **Multi-stage builds** - Build wheels in a builder stage, copy only runtime dependencies to final stage
+2. **`slim-bookworm` base image** - Uses Debian slim variant instead of full image (~150MB vs ~1GB)
+3. **`--no-cache-dir`** - Pip doesn't cache packages, reducing image size
+4. **`--no-install-recommends`** - Only installs required packages, not recommended ones
+5. **Layer optimization** - Combined RUN commands with cleanup in same layer
+6. **Non-root user** - Production stage runs as `appuser` for security
+7. **Minimal runtime dependencies** - Only `libpq5` (PostgreSQL client lib) is needed at runtime; `gcc` and `libpq-dev` stay in builder stage
+
+A separate `Dockerfile.celery` is used for Celery worker.
+
+### b. Docker Compose Services
+
+All services run via `docker compose up -d`:
+
+| Service | Port | Description |
+|---------|------|-------------|
+| app | 8000 | FastAPI application |
+| db | 5432 | PostgreSQL database |
+| redis | 6379 | Redis cache/broker |
+| elasticsearch | 9200 | Request logging |
+| minio | 9000/9001 | Screenshot storage |
+| celery | - | Background tasks |
+| flower | 5555 | Celery task monitoring |
+| pgadmin | 5050 | PostgreSQL web UI |
+| redis-commander | 8081 | Redis web UI |
+| mailhog | 1025/8025 | Email testing |
+
+### c. Service Dependencies
+
+Services use `depends_on` with `condition: service_healthy` to ensure proper startup order:
+- `app` waits for `db` and `redis` to be healthy
+- `celery` and `flower` wait for `redis` and `db` to be healthy
+- `elasticsearch-init` waits for `elasticsearch` to be healthy
+
+### d. Database Persistence
+
+PostgreSQL data is persisted using Docker volumes:
+```yaml
+volumes:
+  - db_data:/var/lib/postgresql/data
+```
+
+### e. Additional Tools
+
+**Flower** (Celery monitoring):
+- Web UI at `http://localhost:5555`
+- Monitor active tasks, workers, results
+- View task history and statistics
+
+**pgAdmin** (PostgreSQL UI):
+- Web UI at `http://localhost:5050`
+- Default login: admin@backloggd.com / admin
+- Browse tables, run queries, manage database
+
+**Redis Commander** (Redis UI):
+- Web UI at `http://localhost:8081`
+- Browse keys, view values, manage cache

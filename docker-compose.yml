@@ -1,4 +1,22 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backloggd-app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
   db:
     image: postgres:18-alpine
     container_name: backloggd-db
@@ -7,11 +25,11 @@ services:
     env_file:
       - ./.env
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     volumes:
       - db_data:/var/lib/postgresql/data
 
@@ -21,14 +39,16 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis_data:/data
 
   elasticsearch:
     image: elasticsearch:9.3.2
+    container_name: backloggd-elasticsearch
     restart: unless-stopped
     environment:
       - discovery.type=single-node
@@ -39,10 +59,11 @@ services:
     volumes:
       - es_data:/usr/share/elasticsearch/data
     healthcheck:
-      test: [ "CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1" ]
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 30s
 
   elasticsearch-init:
     image: curlimages/curl:latest
@@ -86,7 +107,7 @@ services:
       MINIO_ROOT_PASSWORD: password
     command: server /data --console-address ":9001"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -96,14 +117,35 @@ services:
   celery:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.celery
     container_name: backloggd-celery
     command: celery -A app.core.celery_app worker --loglevel=info
     env_file:
       - ./.env
     depends_on:
-      - redis
-      - minio
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    working_dir: /app
+
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    container_name: backloggd-flower
+    command: celery -A app.core.celery_app flower --port=5555
+    ports:
+      - "5555:5555"
+    env_file:
+      - ./.env
+    depends_on:
+      redis:
+        condition: service_healthy
+      celery:
+        condition: service_started
     volumes:
       - .:/app
     working_dir: /app
@@ -115,7 +157,31 @@ services:
       - "1025:1025"
       - "8025:8025"
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: backloggd-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@backloggd.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: backloggd-redis-commander
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      redis:
+        condition: service_healthy
+
 volumes:
     db_data:
     es_data:
     minio_data:
+    redis_data:
